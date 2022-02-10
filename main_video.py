@@ -8,19 +8,25 @@ sfr = SimpleFacerec()
 #sfr.load_encoding_images("images/")
 
 # Load Camera
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 sfr.read_stored_files()
 
-cur_faces = []
+cur_faces = {}
 
 while True:
     ret, frame = cap.read()
     now = datetime.datetime.now()
     # Detect Faces
     face_locations, face_names, distances = sfr.detect_known_faces(frame)
-    if(sorted(face_names) != sorted(cur_faces)):
-        cur_faces = face_names
+    for i in face_names:
+    	if(i in cur_faces.keys()):
+    		if((now - cur_faces[i][-1]).total_seconds()>180):
+    			cur_faces[i].append(now)
+    		else:
+    			cur_faces[i][-1]=now
+    	else:
+    		cur_faces[i]=[now]
     for face_loc, name, distance in zip(face_locations, face_names, distances):
         y1, x2, y2, x1 = face_loc[0], face_loc[1], face_loc[2], face_loc[3]
 
@@ -31,8 +37,8 @@ while True:
     cv2.imshow("Frame", frame)
 
     key = cv2.waitKey(1)
+    print(cur_faces)
     if key == 27:
         break
-
 cap.release()
 cv2.destroyAllWindows()
